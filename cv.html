@@ -1,0 +1,137 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8">
+<title>Mon CV - Dashboard</title><style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Segoe UI,sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh}
+nav{background:#1e293b;padding:12px 24px;border-bottom:1px solid #334155;display:flex;gap:4px;align-items:center}
+nav .logo{color:#64748b;font-size:12px;margin-right:12px;font-weight:600}
+nav a{padding:7px 14px;border-radius:8px;font-size:13px;text-decoration:none;color:#94a3b8;border:1px solid #334155;transition:all .2s}
+nav a:hover{background:#334155;color:#e2e8f0}
+nav a.actif{background:#3b82f6;border-color:#3b82f6;color:#fff}
+.header{background:#1e293b;padding:16px 24px;border-bottom:1px solid #334155}
+.header h1{font-size:18px;font-weight:600;color:#f1f5f9}
+.header p{font-size:12px;color:#94a3b8;margin-top:3px}
+.stats{display:flex;gap:12px;padding:16px 24px;flex-wrap:wrap}
+.stat{background:#1e293b;border:1px solid #334155;border-radius:10px;padding:12px 20px;text-align:center;min-width:110px}
+.stat .nb{font-size:24px;font-weight:700}
+.stat .lb{font-size:11px;color:#94a3b8;margin-top:3px}
+.filtres{padding:0 24px 14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.filtres input{background:#1e293b;border:1px solid #334155;border-radius:8px;padding:7px 12px;color:#e2e8f0;font-size:13px;width:240px;outline:none}
+.filtres input:focus{border-color:#3b82f6}
+.btn{background:#1e293b;border:1px solid #334155;border-radius:8px;padding:6px 12px;color:#94a3b8;font-size:12px;cursor:pointer;transition:all .2s}
+.btn:hover,.btn.actif{background:#3b82f6;border-color:#3b82f6;color:#fff}
+.cpt{color:#94a3b8;font-size:12px;padding:0 24px 8px}
+.liste{padding:0 24px 32px;display:flex;flex-direction:column;gap:8px}
+.carte{background:#1e293b;border:1px solid #334155;border-radius:10px;overflow:hidden}
+.carte:hover{border-color:#475569}
+.ch{display:flex;align-items:center;gap:12px;padding:12px 16px}
+.sc{font-size:18px;font-weight:700;min-width:44px;text-align:center}
+.inf{flex:1}
+.inf h3{font-size:13px;font-weight:600;color:#f1f5f9;margin-bottom:4px}
+.meta{font-size:11px;color:#64748b}
+.bdg{font-size:11px;font-weight:600;padding:3px 8px;border-radius:16px;white-space:nowrap}
+.cb{padding:10px 16px 12px;border-top:1px solid #334155}
+.desc{font-size:12px;color:#94a3b8;line-height:1.5;margin-bottom:8px}
+.strow{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}
+.stsel{background:#0f172a;border:1px solid #334155;border-radius:6px;padding:4px 8px;color:#e2e8f0;font-size:12px;cursor:pointer;outline:none}
+.dtrel{background:#0f172a;border:1px solid #334155;border-radius:6px;padding:4px 8px;color:#e2e8f0;font-size:12px;outline:none;display:none}
+.noteinp{width:100%;background:#0f172a;border:1px solid #334155;border-radius:6px;padding:6px 8px;color:#e2e8f0;font-size:12px;resize:none;outline:none;font-family:inherit;margin-bottom:8px}
+.noteinp:focus{border-color:#3b82f6}
+.ft{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.rais{font-size:11px;color:#475569;font-style:italic}
+.lienoffre a{color:#3b82f6;font-size:12px;text-decoration:none}
+.lienoffre a:hover{text-decoration:underline}
+.btncv{background:#1e3a5f;border:1px solid #3b82f6;border-radius:6px;padding:4px 10px;color:#93c5fd;font-size:12px;cursor:pointer}
+.btncv:hover{background:#3b82f6;color:#fff}
+.acv{background:#0f172a;border:1px solid #334155;border-radius:6px;padding:10px;margin-top:8px;font-size:12px;line-height:1.6;display:none}
+.page{padding:20px 24px}
+.card{background:#1e293b;border:1px solid #334155;border-radius:10px;padding:16px;margin-bottom:12px}
+.card h2{font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:12px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:#334155;padding:8px 12px;text-align:left;color:#94a3b8;font-size:11px;text-transform:uppercase}
+td{padding:8px 12px;border-bottom:1px solid #0f172a;color:#e2e8f0}
+tr:hover td{background:#243044}
+.pill{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600}
+.drop{border:2px dashed #334155;border-radius:10px;padding:32px;text-align:center;cursor:pointer;transition:all .2s}
+.drop:hover{border-color:#3b82f6;background:#1a2744}
+.drop p{color:#94a3b8;font-size:13px;margin-top:8px}
+.cvtxt{background:#0f172a;border:1px solid #334155;border-radius:8px;padding:12px;margin-top:12px;font-size:12px;line-height:1.7;color:#e2e8f0;white-space:pre-wrap;max-height:350px;overflow-y:auto}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.bar-r{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:12px}
+.bar-l{width:80px;color:#94a3b8;font-size:11px}
+.bar-bg{flex:1;background:#0f172a;border-radius:3px;height:7px;overflow:hidden}
+.bar-f{height:100%;border-radius:3px;transition:width .4s}
+.bar-v{width:24px;text-align:right;color:#e2e8f0;font-size:11px;font-weight:600}
+.rrow{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:1px solid #334155}
+.rrow:last-child{border:none}
+</style></head><body>
+<nav>
+  <span class="logo">Dashboard</span>
+  <a href="offres.html" id="n-offres">Offres (442)</a>
+  <a href="suivi.html" id="n-suivi">Suivi candidatures</a>
+  <a href="cv.html" id="n-cv">Mon CV</a>
+  <a href="stats.html" id="n-stats">Statistiques</a>
+</nav>
+<script>document.getElementById("n-cv").classList.add("actif");</script>
+<div class="header">
+  <h1>Mon CV</h1>
+  <p>Importe ton CV pour analyser ta compatibilite avec les offres</p>
+</div>
+<div class="page">
+  <div class="card">
+    <h2>Importer mon CV</h2>
+    <div class="drop" id="drop">
+      <div style="font-size:36px">&#128196;</div>
+      <p>Clique ou glisse ton CV ici (.txt)</p>
+      <p style="font-size:11px;margin-top:6px;color:#475569">Sauvegarde localement dans le navigateur</p>
+      <input type="file" id="cv-in" accept=".txt" style="display:none">
+    </div>
+    <div id="cv-ok" style="display:none;margin-top:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <span style="color:#22c55e;font-size:13px;font-weight:600">CV charge</span>
+        <button id="cv-del" style="background:#7f1d1d;border:none;border-radius:6px;padding:4px 10px;color:#fca5a5;font-size:12px;cursor:pointer">Supprimer</button>
+      </div>
+      <div class="cvtxt" id="cv-txt"></div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Comment utiliser l analyse CV</h2>
+    <p style="font-size:13px;color:#64748b;line-height:1.9">
+      1. Importe ton CV ci-dessus en format .txt<br>
+      2. Va sur la page <a href="offres.html" style="color:#3b82f6">Offres</a><br>
+      3. Clique sur <strong style="color:#93c5fd">Analyser vs CV</strong> sur n importe quelle offre<br>
+      4. Tu verras les competences presentes et manquantes dans ton CV<br>
+      5. Adapte ton CV en consequence pour maximiser tes chances
+    </p>
+  </div>
+</div>
+<script>
+var CV=localStorage.getItem("cv")||"";
+function showCV(t){
+    document.getElementById("cv-ok").style.display="block";
+    document.getElementById("cv-txt").textContent=t;
+}
+if(CV) showCV(CV);
+document.getElementById("drop").onclick=function(){ document.getElementById("cv-in").click(); };
+document.getElementById("drop").ondragover=function(e){ e.preventDefault(); this.style.borderColor="#3b82f6"; };
+document.getElementById("drop").ondragleave=function(){ this.style.borderColor="#334155"; };
+document.getElementById("drop").ondrop=function(e){
+    e.preventDefault(); this.style.borderColor="#334155";
+    if(e.dataTransfer.files[0]) loadFile(e.dataTransfer.files[0]);
+};
+document.getElementById("cv-in").onchange=function(){ if(this.files[0]) loadFile(this.files[0]); };
+document.getElementById("cv-del").onclick=function(){
+    localStorage.removeItem("cv"); CV="";
+    document.getElementById("cv-ok").style.display="none";
+};
+function loadFile(f){
+    if(f.name.endsWith(".pdf")){
+        var fd=new FormData();
+        fd.append("file",f);
+        alert("Format PDF non supporte directement.\nConvertis ton CV en .txt :\n\n1. Ouvre ton CV dans Word\n2. Fichier > Enregistrer sous\n3. Choisis format .txt\n4. Reimporte ici");
+        return;
+    }
+    var r=new FileReader();
+    r.onload=function(e){CV=e.target.result;localStorage.setItem("cv",CV);showCV(CV);};
+    r.readAsText(f,"utf-8");
+}
+</script></body></html>

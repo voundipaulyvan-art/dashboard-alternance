@@ -1,0 +1,12 @@
+venv/ 
+offres.csv 
+offres_scored.csv 
+offres.html 
+suivi.html 
+cv.html 
+stats.html 
+dashboard_v2.html 
+dashboard.html 
+__pycache__/ 
+*.pyc 
+.vscode/ 
