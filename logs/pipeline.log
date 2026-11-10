@@ -1,0 +1,10 @@
+2026-11-10 21:59:08 [INFO] =======================================================
+2026-11-10 21:59:08 [INFO] Pipeline alternance démarré
+2026-11-10 21:59:08 [INFO] Étape 1/3 — Collecte via API France Travail...
+2026-11-10 21:59:12 [INFO]   → 125 offres collectées et scorées
+2026-11-10 21:59:12 [INFO] Étape 2/3 — Initialisation de la base de données...
+2026-11-10 21:59:12 [INFO]   → offres.db prête
+2026-11-10 21:59:12 [INFO] Étape 3/3 — Sauvegarde (upsert idempotent)...
+2026-11-10 21:59:12 [INFO]   → 125 offres insérées/mises à jour
+2026-11-10 21:59:12 [INFO] Pipeline terminé — 125 offres en base
+2026-11-10 21:59:12 [INFO] =======================================================

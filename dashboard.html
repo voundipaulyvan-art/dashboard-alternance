@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard Alternance</title>
+  <link rel="icon" type="image/png" href="logo.png" />
+  <link rel="apple-touch-icon" href="logo.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script crossorigin src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.25.6/babel.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+  <style>
+    :root {
+      --indigo:#6366f1; --indigo-d:rgba(99,102,241,.14); --indigo-g:rgba(99,102,241,.28);
+      --violet:#8b5cf6; --green:#10b981; --green-d:rgba(16,185,129,.12);
+      --amber:#f59e0b; --amber-d:rgba(245,158,11,.12);
+      --sky:#38bdf8; --sky-d:rgba(56,189,248,.12);
+      --red:#ef4444; --red-d:rgba(239,68,68,.12);
+      --r:10px; --r-sm:7px; --sw:234px; --tr:all .18s ease;
+    }
+    :root, :root[data-theme="dark"] {
+      --bg:#111827; --sb:#0f172a; --sf:#1e293b; --sf2:#263348; --sf3:#2e3c52;
+      --bd:rgba(255,255,255,.07); --bdh:rgba(255,255,255,.14);
+      --tx:#f1f5f9; --tx2:#94a3b8; --tx3:#64748b;
+    }
+    :root[data-theme="light"] {
+      --bg:#f1f5f9; --sb:#ffffff; --sf:#ffffff; --sf2:#f8fafc; --sf3:#f1f5f9;
+      --bd:rgba(0,0,0,.07); --bdh:rgba(0,0,0,.14);
+      --tx:#0f172a; --tx2:#475569; --tx3:#94a3b8;
+    }
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Poppins','Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;overflow-x:hidden;transition:background .25s,color .25s}
+
+    @keyframes fadeUp  {from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+    @keyframes fadeIn  {from{opacity:0}to{opacity:1}}
+    @keyframes shimmer {0%{background-position:-200% 0}100%{background-position:200% 0}}
+    @keyframes spin    {to{transform:rotate(360deg)}}
+    @keyframes barIn   {from{width:0!important}}
+    @keyframes glow    {0%,100%{opacity:.7}50%{opacity:1}}
+    @keyframes popIn   {0%{r:0}100%{}}
+
+    .app{display:flex;min-height:100vh}
+
+    /* ── Sidebar ── */
+    .sidebar{width:var(--sw);flex-shrink:0;background:var(--sb);border-right:1px solid var(--bd);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:50;overflow-y:auto;transition:background .25s,border-color .25s}
+    .sb-brand{padding:18px 14px 13px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--bd);flex-shrink:0}
+    .brand-icon{width:34px;height:34px;border-radius:9px;flex-shrink:0;overflow:hidden}
+    .brand-icon img{width:100%;height:100%;object-fit:cover}
+    .brand-txt{font-size:13.5px;font-weight:700;color:var(--tx);line-height:1.2}
+    .brand-sub{font-size:10px;color:var(--tx3);font-weight:400}
+    .sb-sec{padding:12px 10px 2px;flex-shrink:0}
+    .sb-lbl{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--tx3);padding:0 6px;margin-bottom:3px}
+    .nav-item{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:var(--r-sm);font-size:12.5px;font-weight:500;color:var(--tx2);cursor:pointer;transition:var(--tr);background:none;border:none;width:100%;text-align:left;font-family:inherit}
+    .nav-item:hover{background:var(--sf2);color:var(--tx)}
+    .nav-item.active{background:var(--indigo-d);color:var(--indigo);border:1px solid rgba(99,102,241,.22)}
+    .nav-badge{margin-left:auto;background:var(--indigo);color:#fff;border-radius:999px;font-size:10px;font-weight:600;padding:1px 6px;min-width:18px;text-align:center}
+    .nav-cnt{margin-left:auto;font-size:11px;color:var(--tx3)}
+    .nav-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+    .sb-div{height:1px;background:var(--bd);margin:6px 10px}
+    .sb-footer{margin-top:auto;padding:10px 10px 14px;border-top:1px solid var(--bd);flex-shrink:0;display:flex;flex-direction:column;gap:7px}
+    /* dept drawer */
+    .dept-drawer{background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);margin-top:12px;overflow:hidden;animation:fadeUp .3s ease both}
+    .dept-drawer-head{padding:12px 16px;background:var(--sf2);border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:10px}
+    .dept-drawer-title{font-size:13px;font-weight:600;flex:1}
+    .dept-drawer-close{width:26px;height:26px;border-radius:6px;background:var(--sf3);border:1px solid var(--bd);color:var(--tx3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:var(--tr)}
+    .dept-drawer-close:hover{background:var(--red-d);color:var(--red);border-color:rgba(239,68,68,.3)}
+    /* kpi row */
+    .kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:14px}
+    .kpi-card{background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);padding:14px 16px;text-align:center;position:relative;overflow:hidden}
+    .kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+    .kpi-indigo::before{background:var(--indigo)} .kpi-green::before{background:var(--green)}
+    .kpi-amber::before{background:var(--amber)} .kpi-sky::before{background:var(--sky)}
+    .kpi-violet::before{background:var(--violet)}
+    .kpi-val{font-size:28px;font-weight:800;line-height:1;letter-spacing:-1px;margin-bottom:3px}
+    .kpi-indigo .kpi-val{color:var(--indigo)} .kpi-green .kpi-val{color:var(--green)}
+    .kpi-amber .kpi-val{color:var(--amber)} .kpi-sky .kpi-val{color:var(--sky)}
+    .kpi-violet .kpi-val{color:var(--violet)}
+    .kpi-lbl{font-size:10.5px;color:var(--tx3);font-weight:500}
+    .kpi-sub{font-size:10px;color:var(--tx3);margin-top:2px}
+    /* gauge */
+    .gauge-wrap{display:flex;justify-content:center;margin:8px 0}
+    .tag-cloud{display:flex;flex-wrap:wrap;gap:6px;padding:4px 0}
+    .tech-tag{padding:4px 10px;border-radius:999px;font-size:11px;font-weight:500;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);display:flex;align-items:center;gap:5px}
+    .tech-tag-cnt{font-size:10px;font-weight:700;color:var(--indigo);background:var(--indigo-d);padding:1px 5px;border-radius:999px}
+    .theme-btn{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:var(--r-sm);font-size:12px;font-weight:500;color:var(--tx2);background:none;border:1px solid var(--bd);cursor:pointer;font-family:inherit;width:100%;transition:var(--tr)}
+    .theme-btn:hover{background:var(--sf2);color:var(--tx);border-color:var(--bdh)}
+    .refresh-btn{display:flex;align-items:center;justify-content:center;gap:7px;padding:9px 12px;border-radius:var(--r-sm);background:var(--indigo-d);border:1px solid rgba(99,102,241,.3);color:var(--indigo);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;width:100%;transition:var(--tr)}
+    .refresh-btn:hover:not(:disabled){background:var(--indigo);color:#fff}
+    .refresh-btn:disabled{opacity:.4;cursor:not-allowed}
+
+    /* ── Main ── */
+    .main{margin-left:var(--sw);flex:1;min-width:0;display:flex;flex-direction:column}
+    .topbar{position:sticky;top:0;z-index:40;background:var(--sb);border-bottom:1px solid var(--bd);padding:0 24px;display:flex;align-items:center;gap:10px;height:52px;transition:background .25s,border-color .25s}
+    .topbar-title{font-size:15px;font-weight:700}
+    .topbar-count{font-size:12px;color:var(--tx3)}
+    .live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:glow 2s ease-in-out infinite;flex-shrink:0}
+    .page{padding:20px 24px 48px;flex:1}
+
+    /* ── Stat row ── */
+    .stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:20px;animation:fadeUp .3s ease both}
+    .stat-card{background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);padding:14px 16px;position:relative;overflow:hidden;cursor:default;transition:var(--tr)}
+    .stat-card:hover{transform:translateY(-2px);border-color:var(--bdh)}
+    .stat-card.clickable{cursor:pointer}
+    .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+    .sc-indigo::before{background:linear-gradient(90deg,var(--indigo),transparent)}
+    .sc-green::before{background:linear-gradient(90deg,var(--green),transparent)}
+    .sc-amber::before{background:linear-gradient(90deg,var(--amber),transparent)}
+    .sc-violet::before{background:linear-gradient(90deg,var(--violet),transparent)}
+    .sc-sky::before{background:linear-gradient(90deg,var(--sky),transparent)}
+    .stat-nb{font-size:30px;font-weight:800;line-height:1;letter-spacing:-1.5px;margin-bottom:3px}
+    .sc-indigo .stat-nb{color:var(--indigo)} .sc-green .stat-nb{color:var(--green)}
+    .sc-amber .stat-nb{color:var(--amber)} .sc-violet .stat-nb{color:var(--violet)}
+    .sc-sky .stat-nb{color:var(--sky)}
+    .stat-lbl{font-size:11px;color:var(--tx3);font-weight:500}
+
+    /* ── Toolbar ── */
+    .toolbar{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-bottom:14px;animation:fadeUp .3s .06s ease both}
+    .search-wrap{position:relative;flex:1;min-width:200px}
+    .search-input{width:100%;padding:8px 12px 8px 34px;background:var(--sf);border:1px solid var(--bd);border-radius:var(--r-sm);color:var(--tx);font-size:12px;font-family:inherit;outline:none;transition:var(--tr)}
+    .search-input::placeholder{color:var(--tx3)}
+    .search-input:focus{border-color:var(--indigo)}
+    .s-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--tx3);pointer-events:none}
+    .chip{padding:6px 11px;border-radius:999px;font-size:11.5px;font-weight:500;border:1px solid var(--bd);background:var(--sf);color:var(--tx2);cursor:pointer;transition:var(--tr);display:flex;align-items:center;gap:5px;font-family:inherit}
+    .chip:hover{border-color:var(--bdh);color:var(--tx)}
+    .chip.on{background:var(--indigo-d);border-color:rgba(99,102,241,.4);color:var(--indigo)}
+
+    /* ── Offer table ── */
+    .offers-wrap{background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);overflow:hidden;animation:fadeUp .3s .1s ease both}
+    .tbl-head{display:grid;grid-template-columns:36px 1fr 150px 130px 68px 100px 36px;padding:8px 14px;background:var(--sf2);border-bottom:1px solid var(--bd);font-size:10.5px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em}
+    .offer-row{display:grid;grid-template-columns:36px 1fr 150px 130px 68px 100px 36px;padding:11px 14px;border-bottom:1px solid var(--bd);align-items:center;cursor:pointer;transition:background .12s}
+    .offer-row:last-child{border-bottom:none}
+    .offer-row:hover,.offer-row.open{background:var(--sf2)}
+    .score-box{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+    .sh{background:rgba(16,185,129,.15);color:var(--green)} .sm{background:rgba(245,158,11,.15);color:var(--amber)} .sl{background:rgba(99,102,241,.15);color:var(--indigo)}
+    .row-title{font-size:12.5px;font-weight:500;padding-right:10px;line-height:1.3}
+    .row-ent{font-size:11.5px;color:var(--tx2)} .row-lieu{font-size:11px;color:var(--tx3)} .row-date{font-size:11px;color:var(--tx3)}
+    .expand-btn{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;background:var(--sf3);border:1px solid var(--bd);color:var(--tx3);cursor:pointer;transition:var(--tr)}
+    .expand-btn:hover{background:var(--indigo-d);color:var(--indigo);border-color:rgba(99,102,241,.3)}
+    .expand-btn svg{transition:transform .2s} .expand-btn.open svg{transform:rotate(180deg)}
+    .detail-panel{padding:14px 14px 16px 64px;border-bottom:1px solid var(--bd);background:var(--sf2);animation:fadeIn .18s ease both}
+    .detail-desc{font-size:12px;color:var(--tx2);line-height:1.75;margin-bottom:12px;max-width:640px}
+    .detail-tags{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .dtag{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:500;background:var(--sf3);color:var(--tx2);border:1px solid var(--bd)}
+    .btn-link{padding:7px 14px;border-radius:var(--r-sm);background:var(--indigo-d);border:1px solid rgba(99,102,241,.3);color:var(--indigo);font-size:11.5px;font-weight:600;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:var(--tr);font-family:inherit;margin-left:auto}
+    .btn-link:hover{background:var(--indigo);color:#fff}
+    .status-select{background:var(--sf3);border:1px solid var(--bd);border-radius:var(--r-sm);color:var(--tx);font-size:11.5px;font-family:inherit;padding:5px 10px;cursor:pointer;outline:none;transition:var(--tr)}
+    .status-select:focus{border-color:var(--indigo)}
+    .sbadge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:500;white-space:nowrap}
+    .sb-none{background:var(--sf3);color:var(--tx3)} .sb-fav{background:var(--amber-d);color:var(--amber)}
+    .sb-apply{background:var(--indigo-d);color:var(--indigo)} .sb-sent{background:var(--sky-d);color:var(--sky)}
+    .sb-int{background:var(--green-d);color:var(--green)} .sb-refused{background:var(--red-d);color:var(--red)}
+
+    /* ── Skeleton ── */
+    .skel-row{display:grid;grid-template-columns:36px 1fr 150px 130px 68px 100px 36px;padding:11px 14px;border-bottom:1px solid var(--bd);align-items:center}
+    .skel{height:13px;border-radius:4px;background:linear-gradient(90deg,var(--sf2) 25%,var(--sf3) 50%,var(--sf2) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite}
+    .skel-sq{width:28px;height:28px;border-radius:7px}
+
+    /* ── Empty ── */
+    .empty{padding:48px 20px;display:flex;flex-direction:column;align-items:center;gap:12px;animation:fadeIn .3s ease both}
+    .empty-title{font-size:14.5px;font-weight:600;color:var(--tx2)} .empty-sub{font-size:12px;color:var(--tx3);text-align:center;max-width:260px}
+
+    /* ── Kanban ── */
+    .kanban{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;align-items:start;animation:fadeUp .3s .08s ease both}
+    .kcol{background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);overflow:hidden}
+    .kcol-head{padding:11px 13px;background:var(--sf2);border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:7px}
+    .col-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+    .kcol-title{font-size:12px;font-weight:600}
+    .kcol-count{margin-left:auto;font-size:11px;color:var(--tx3);background:var(--sf3);padding:1px 7px;border-radius:999px;font-weight:600}
+    .kcol-cards{padding:8px;display:flex;flex-direction:column;gap:7px;min-height:50px}
+    .kcard{background:var(--sf2);border:1px solid var(--bd);border-radius:var(--r-sm);padding:10px 11px;cursor:pointer;transition:transform .15s,border-color .15s}
+    .kcard:hover{transform:translateY(-1px);border-color:var(--bdh)}
+    .kcard-title{font-size:12px;font-weight:500;margin-bottom:4px;line-height:1.4}
+    .kcard-ent{font-size:11px;color:var(--tx3)}
+    .kcard-score{display:inline-block;margin-top:6px;padding:2px 7px;border-radius:999px;font-size:10px;font-weight:600;background:var(--indigo-d);color:var(--indigo)}
+    .col-empty{padding:10px 13px;font-size:11px;color:var(--tx3);text-align:center}
+
+    /* ── Stats ── */
+    .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:14px;animation:fadeUp .3s .08s ease both}
+    .chart-card{background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);padding:16px 18px}
+    .chart-title{font-size:12.5px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:7px;color:var(--tx)}
+    .bar-row{display:flex;align-items:center;gap:9px;margin-bottom:8px}
+    .bar-lbl{width:120px;flex-shrink:0;font-size:11px;color:var(--tx2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .bar-track{flex:1;height:7px;background:var(--sf2);border-radius:999px;overflow:hidden}
+    .bar-fill{height:100%;border-radius:999px;animation:barIn .6s ease both;transition:width .6s ease}
+    .bar-val{font-size:11px;color:var(--tx3);min-width:24px;text-align:right}
+    .pie-row{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+    .pie-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+    .kpi-row .kpi-val{font-size:26px}
+
+    /* ── Map ── */
+    .map-wrap{background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);overflow:hidden;animation:fadeUp .3s .05s ease both}
+    .map-header{padding:14px 18px;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:10px}
+    .map-title{font-size:13px;font-weight:600}
+    .map-sub{font-size:11.5px;color:var(--tx3);margin-left:auto}
+    .map-body{display:flex;gap:0}
+    .map-svg-wrap{flex:1;min-width:0;padding:12px 0;position:relative}
+    .map-svg{width:100%;display:block}
+    .map-panel{width:220px;flex-shrink:0;border-left:1px solid var(--bd);padding:14px 12px;display:flex;flex-direction:column;gap:4px;overflow-y:auto;max-height:520px}
+    .map-panel-title{font-size:10.5px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px}
+    .dept-row{display:flex;align-items:center;gap:8px;padding:5px 7px;border-radius:6px;cursor:pointer;transition:background .12s;font-size:11.5px}
+    .dept-row:hover{background:var(--sf2)}
+    .dept-row.hl{background:var(--indigo-d);color:var(--indigo)}
+    .dept-name{flex:1;font-weight:500}
+    .dept-count{font-size:10.5px;color:var(--tx3);font-weight:600}
+    .map-tooltip{position:absolute;pointer-events:none;background:var(--sf);border:1px solid var(--bd);border-radius:8px;padding:8px 12px;font-size:12px;box-shadow:0 4px 20px rgba(0,0,0,.3);z-index:10;min-width:140px}
+    .map-tooltip strong{display:block;margin-bottom:3px;font-size:13px}
+    .map-loading{padding:60px;text-align:center;color:var(--tx3);font-size:13px}
+    .map-legend{display:flex;align-items:center;gap:10px;padding:10px 18px;border-top:1px solid var(--bd);font-size:11px;color:var(--tx3)}
+    .legend-grad{flex:1;max-width:120px;height:8px;border-radius:999px;background:linear-gradient(90deg,var(--sf2),var(--indigo))}
+
+    /* ── Error ── */
+    .err-banner{background:var(--red-d);border:1px solid rgba(239,68,68,.3);border-radius:var(--r);padding:12px 16px;font-size:12.5px;color:var(--red);display:flex;align-items:center;gap:9px;animation:fadeUp .3s ease both;margin-bottom:14px}
+
+    /* ── Dept path hover (SVG) ── */
+    .dept-path{cursor:pointer;transition:opacity .15s}
+    .dept-path:hover{opacity:.85}
+
+    ::-webkit-scrollbar{width:5px;height:5px}
+    ::-webkit-scrollbar-track{background:transparent}
+    ::-webkit-scrollbar-thumb{background:var(--sf3);border-radius:3px}
+
+    @media(max-width:800px){
+      :root{--sw:0px}
+      .sidebar{display:none} .main{margin-left:0}
+      .tbl-head{display:none}
+      .offer-row{grid-template-columns:36px 1fr 68px 36px}
+      .offer-row .row-ent,.offer-row .row-lieu,.offer-row .row-date{display:none}
+      .topbar,.page{padding-left:14px;padding-right:14px}
+      .map-panel{display:none}
+    }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useCallback, useRef, useMemo } = React;
+
+/* ══ SVG Icons ══ */
+const IC = {
+  search:  <><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></>,
+  list:    <><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="3.5" cy="6" r=".5" fill="currentColor"/><circle cx="3.5" cy="12" r=".5" fill="currentColor"/><circle cx="3.5" cy="18" r=".5" fill="currentColor"/></>,
+  board:   <><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></>,
+  bar:     <><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></>,
+  map:     <><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></>,
+  star:    <><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></>,
+  clip:    <><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></>,
+  send:    <><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></>,
+  users:   <><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></>,
+  x:       <><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>,
+  refresh: <><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></>,
+  sun:     <><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></>,
+  moon:    <><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></>,
+  chevron: <><polyline points="6 9 12 15 18 9"/></>,
+  link:    <><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></>,
+  pin:     <><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></>,
+  sparkle: <><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3z"/></>,
+  target:  <><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></>,
+  calendar:<><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></>,
+  cv:      <><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></>,
+};
+function Icon({n,size=16,style,className}){
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={style} className={className}>{IC[n]}</svg>;
+}
+
+/* ══ Dept utils ══ */
+const DEPT_NAMES = {
+  '01':'Ain','02':'Aisne','03':'Allier','06':'Alpes-Mar.','13':'Bouches-du-Rhône',
+  '14':'Calvados','17':'Charente-Mar.','21':'Côte-d\'Or','25':'Doubs','26':'Drôme',
+  '29':'Finistère','31':'Haute-Garonne','33':'Gironde','34':'Hérault','35':'Ille-et-Vilaine',
+  '38':'Isère','42':'Loire','44':'Loire-Atl.','45':'Loiret','49':'Maine-et-Loire',
+  '54':'Meurthe-et-M.','57':'Moselle','59':'Nord','62':'Pas-de-Calais',
+  '63':'Puy-de-Dôme','67':'Bas-Rhin','68':'Haut-Rhin','69':'Rhône',
+  '74':'Haute-Savoie','75':'Paris','76':'Seine-Mar.','78':'Yvelines',
+  '80':'Somme','83':'Var','84':'Vaucluse','87':'Haute-Vienne',
+  '91':'Essonne','92':'Hauts-de-Seine','93':'Seine-Saint-Denis',
+  '94':'Val-de-Marne','95':'Val-d\'Oise',
+};
+const DEPT_CITIES = {
+  '01':'Bourg-en-Bresse','02':'Laon','03':'Moulins','06':'Nice','13':'Marseille',
+  '14':'Caen','17':'La Rochelle','21':'Dijon','25':'Besançon','26':'Valence',
+  '29':'Brest','31':'Toulouse','33':'Bordeaux','34':'Montpellier','35':'Rennes',
+  '38':'Grenoble','42':'Saint-Étienne','44':'Nantes','45':'Orléans','49':'Angers',
+  '54':'Nancy','57':'Metz','59':'Lille','62':'Arras','63':'Clermont-Ferrand',
+  '67':'Strasbourg','68':'Mulhouse','69':'Lyon','74':'Annecy',
+  '75':'Paris','76':'Rouen','78':'Versailles','80':'Amiens',
+  '83':'Toulon','84':'Avignon','87':'Limoges',
+  '91':'Évry','92':'Nanterre','93':'Bobigny','94':'Créteil','95':'Cergy',
+};
+
+function extractDept(lieu) {
+  if (!lieu) return null;
+  // "75 - PARIS" or "75"
+  const m1 = lieu.match(/^(\d{2,3})(?:\s|$|-)/);
+  if (m1) { const c = m1[1]; if (parseInt(c) <= 976) return c.padStart(2,'0'); }
+  // "PARIS (75)"
+  const m2 = lieu.match(/\((\d{2,3})\)/);
+  if (m2) return m2[1].padStart(2,'0');
+  return null;
+}
+
+function cityLabel(lieu) {
+  if (!lieu) return 'Non précisé';
+  const dept = extractDept(lieu);
+  if (dept && DEPT_CITIES[dept]) return DEPT_CITIES[dept];
+  // "75 - PARIS" → "PARIS"
+  const m1 = lieu.match(/^\d{2,3}\s*-\s*(.+)/);
+  if (m1) { const city = m1[1].trim(); return city.charAt(0)+city.slice(1).toLowerCase(); }
+  // "PARIS (75)" → "PARIS"
+  const m2 = lieu.match(/^(.+?)\s*\(\d+\)/);
+  if (m2) { const city = m2[1].trim(); return city.charAt(0)+city.slice(1).toLowerCase(); }
+  const first = lieu.split(' ')[0];
+  return first.charAt(0)+first.slice(1).toLowerCase();
+}
+
+/* ══ Status config ══ */
+const STC = {
+  '':      {label:'—',          cls:'sb-none',   icon:'list',  dot:'var(--tx3)'},
+  fav:     {label:'Favori',     cls:'sb-fav',    icon:'star',  dot:'var(--amber)'},
+  apply:   {label:'À postuler', cls:'sb-apply',  icon:'clip',  dot:'var(--indigo)'},
+  sent:    {label:'Postulé',    cls:'sb-sent',   icon:'send',  dot:'var(--sky)'},
+  int:     {label:'Entretien',  cls:'sb-int',    icon:'users', dot:'var(--green)'},
+  refused: {label:'Refusé',     cls:'sb-refused',icon:'x',     dot:'var(--red)'},
+};
+
+function StatusBadge({status}){
+  const c=STC[status]||STC[''];
+  return <span className={`sbadge ${c.cls}`}><Icon n={c.icon} size={11}/>{c.label}</span>;
+}
+
+/* ══ Hooks ══ */
+function useLS(key,def){
+  const [v,setV]=useState(()=>{try{const s=localStorage.getItem(key);return s?JSON.parse(s):def;}catch{return def;}});
+  const save=useCallback(val=>{setV(val);try{localStorage.setItem(key,JSON.stringify(val));}catch{};},[key]);
+  return[v,save];
+}
+function useCountUp(target,dur=700){
+  const[n,setN]=useState(0);
+  useEffect(()=>{if(!target){setN(0);return;}let start=null;const raf=ts=>{if(!start)start=ts;const p=Math.min((ts-start)/dur,1);setN(Math.floor(p*target));if(p<1)requestAnimationFrame(raf);};requestAnimationFrame(raf);},[target,dur]);
+  return n;
+}
+
+function sc(s){return s>=10?'sh':s>=5?'sm':'sl';}
+
+/* ══ Stat card ══ */
+function StatCard({nb,label,icon,cls,onClick}){
+  const v=useCountUp(nb);
+  return <div className={`stat-card ${cls}${onClick?' clickable':''}`} onClick={onClick}><div style={{marginBottom:8}}><Icon n={icon} size={18} style={{color:'var(--tx3)'}}/></div><div className="stat-nb">{v}</div><div className="stat-lbl">{label}</div></div>;
+}
+
+/* ══ Skeleton ══ */
+function SkeletonRows(){
+  return Array.from({length:7}).map((_,i)=>(
+    <div key={i} className="skel-row">
+      <div className="skel skel-sq"/>
+      <div style={{paddingRight:10}}><div className="skel" style={{width:`${50+Math.random()*35}%`}}/></div>
+      <div><div className="skel" style={{width:'65%'}}/></div>
+      <div><div className="skel" style={{width:'55%'}}/></div>
+      <div><div className="skel" style={{width:'45%'}}/></div>
+      <div><div className="skel" style={{width:'60%',height:19,borderRadius:999}}/></div>
+      <div/>
+    </div>
+  ));
+}
+
+/* ══ Offer row ══ */
+function OfferRow({o,status,onStatus,idx}){
+  const [open,setOpen]=useState(false);
+  const delay=`${Math.min(idx*.025,.4)}s`;
+  return <>
+    <div className={`offer-row${open?' open':''}`} style={{animation:`fadeUp .28s ${delay} ease both`}} onClick={()=>setOpen(x=>!x)}>
+      <div><span className={`score-box ${sc(o.score)}`}>{o.score}</span></div>
+      <div className="row-title">{o.titre}</div>
+      <div className="row-ent">{o.ent||'—'}</div>
+      <div className="row-lieu">{cityLabel(o.lieu)}</div>
+      <div className="row-date">{o.date||'—'}</div>
+      <div onClick={e=>e.stopPropagation()}><StatusBadge status={status}/></div>
+      <div style={{display:'flex',justifyContent:'flex-end'}}>
+        <button className={`expand-btn${open?' open':''}`} onClick={e=>{e.stopPropagation();setOpen(x=>!x);}}>
+          <Icon n="chevron" size={12}/>
+        </button>
+      </div>
+    </div>
+    {open&&<div className="detail-panel" onClick={e=>e.stopPropagation()}>
+      {o.desc&&<p className="detail-desc">{o.desc}</p>}
+      <div className="detail-tags">
+        {o.rais&&<span className="dtag"><Icon n="sparkle" size={12}/>{o.rais}</span>}
+        {o.lieu&&<span className="dtag"><Icon n="pin" size={12}/>{cityLabel(o.lieu)}</span>}
+        {o.date&&<span className="dtag"><Icon n="calendar" size={12}/>{o.date}</span>}
+        <span className="dtag"><Icon n="target" size={12}/>Score {o.score}</span>
+        <select className="status-select" value={status} onChange={e=>onStatus(o.id,e.target.value)} style={{marginLeft:'auto'}}>
+          {Object.entries(STC).map(([k,c])=><option key={k} value={k}>{c.label}</option>)}
+        </select>
+        {o.lien&&<a href={o.lien} target="_blank" rel="noopener noreferrer" className="btn-link"><Icon n="link" size={12}/>Voir l'offre</a>}
+      </div>
+    </div>}
+  </>;
+}
+
+/* ══ Offer table ══ */
+function OfferTable({offers,statuts,onStatus,loading,preFilter}){
+  const[search,setSearch]=useState('');
+  const[fs,setFs]=useState('');
+  const[fst,setFst]=useState(preFilter||'');
+  useEffect(()=>setFst(preFilter||''),[preFilter]);
+
+  const filtered=offers.filter(o=>{
+    if(search){const q=search.toLowerCase();if(!o.titre?.toLowerCase().includes(q)&&!o.ent?.toLowerCase().includes(q)&&!o.lieu?.toLowerCase().includes(q))return false;}
+    if(fs==='10'&&o.score<10)return false;
+    if(fs==='5'&&o.score<5)return false;
+    if(fst&&(statuts[o.id]||'')!==fst)return false;
+    return true;
+  });
+
+  return <>
+    <div className="toolbar">
+      <div className="search-wrap">
+        <Icon n="search" size={14} className="s-icon"/>
+        <input type="text" className="search-input" placeholder="Rechercher poste, entreprise, ville…" value={search} onChange={e=>setSearch(e.target.value)}/>
+      </div>
+      {[{f:'10',l:'Score ≥ 10',i:'star'},{f:'5',l:'Score ≥ 5',i:'sparkle'}].map(x=>(
+        <button key={x.f} className={`chip${fs===x.f?' on':''}`} onClick={()=>setFs(fs===x.f?'':x.f)}>
+          <Icon n={x.i} size={12}/>{x.l}
+        </button>
+      ))}
+      {Object.entries(STC).filter(([k])=>k).map(([k,c])=>(
+        <button key={k} className={`chip${fst===k?' on':''}`} onClick={()=>setFst(fst===k?'':k)}>
+          <Icon n={c.icon} size={12}/>{c.label}
+        </button>
+      ))}
+    </div>
+    <div className="offers-wrap">
+      {!loading&&<div className="tbl-head"><div/><div>Poste</div><div>Entreprise</div><div>Ville</div><div>Date</div><div>Statut</div><div/></div>}
+      {loading?<SkeletonRows/>:filtered.length===0
+        ?<div className="empty"><Icon n="search" size={42} style={{opacity:.25}}/><div className="empty-title">Aucune offre trouvée</div><div className="empty-sub">Modifiez vos filtres ou actualisez les données.</div></div>
+        :filtered.map((o,i)=><OfferRow key={o.id} o={o} idx={i} status={statuts[o.id]||''} onStatus={onStatus}/>)
+      }
+    </div>
+  </>;
+}
+
+/* ══ Kanban ══ */
+function Kanban({offers,statuts}){
+  const cols=[
+    {key:'fav',label:'Favoris',dot:'var(--amber)'},
+    {key:'apply',label:'À postuler',dot:'var(--indigo)'},
+    {key:'sent',label:'Postulés',dot:'var(--sky)'},
+    {key:'int',label:'Entretiens',dot:'var(--green)'},
+    {key:'refused',label:'Refusés',dot:'var(--red)'},
+  ];
+  return <div className="kanban">
+    {cols.map(col=>{
+      const cards=offers.filter(o=>statuts[o.id]===col.key);
+      return <div key={col.key} className="kcol">
+        <div className="kcol-head">
+          <span className="col-dot" style={{background:col.dot}}/>
+          <Icon n={STC[col.key].icon} size={13} style={{color:col.dot}}/>
+          <span className="kcol-title">{col.label}</span>
+          <span className="kcol-count">{cards.length}</span>
+        </div>
+        <div className="kcol-cards">
+          {cards.length===0
+            ?<div className="col-empty">Aucune offre</div>
+            :cards.map(o=><div key={o.id} className="kcard">
+              <div className="kcard-title">{o.titre}</div>
+              <div className="kcard-ent">{o.ent||'—'} · {cityLabel(o.lieu)}</div>
+              <span className="kcard-score">Score {o.score}</span>
+            </div>)
+          }
+        </div>
+      </div>;
+    })}
+  </div>;
+}
+
+/* ══ Stats ══ */
+function Stats({offers,statuts}){
+  /* ── KPIs ── */
+  const scoreAvg=offers.length?Math.round(offers.reduce((s,o)=>s+o.score,0)/offers.length*10)/10:0;
+  const scoreMax=offers.length?Math.max(...offers.map(o=>o.score)):0;
+
+  function daysDiff(dateStr){
+    try{const d=new Date(dateStr);return Math.floor((Date.now()-d)/86400000);}catch{return 999;}
+  }
+  const recent7  =offers.filter(o=>daysDiff(o.date)<=7).length;
+  const recent14 =offers.filter(o=>daysDiff(o.date)<=14).length;
+  const nbSuivi  =offers.filter(o=>statuts[o.id]).length;
+  const pctSuivi =offers.length?Math.round(nbSuivi/offers.length*100):0;
+  const topScore =offers.filter(o=>o.score>=10).length;
+
+  /* ── Score distribution ── */
+  const scoreBuckets=[
+    {l:'Score ≥ 15',c:offers.filter(o=>o.score>=15).length,color:'var(--green)'},
+    {l:'Score 10-14',c:offers.filter(o=>o.score>=10&&o.score<15).length,color:'var(--indigo)'},
+    {l:'Score 5-9', c:offers.filter(o=>o.score>=5&&o.score<10).length,color:'var(--amber)'},
+    {l:'Score 1-4', c:offers.filter(o=>o.score>=1&&o.score<5).length,color:'var(--tx3)'},
+  ].filter(x=>x.c>0);
+
+  /* ── Villes ── */
+  const villeMap={};
+  offers.forEach(o=>{const l=cityLabel(o.lieu);villeMap[l]=(villeMap[l]||0)+1;});
+  const villeTop=Object.entries(villeMap).sort((a,b)=>b[1]-a[1]).slice(0,8);
+
+  /* ── Top entreprises ── */
+  const entMap={};
+  offers.forEach(o=>{if(o.ent&&o.ent!=='Non precise')entMap[o.ent]=(entMap[o.ent]||0)+1;});
+  const entTop=Object.entries(entMap).sort((a,b)=>b[1]-a[1]).slice(0,7);
+
+  /* ── Ancienneté ── */
+  const ageBuckets=[
+    {l:'< 7 jours',  c:offers.filter(o=>daysDiff(o.date)<=7).length,  color:'var(--green)'},
+    {l:'7 — 14 jours',c:offers.filter(o=>{const d=daysDiff(o.date);return d>7&&d<=14;}).length,color:'var(--amber)'},
+    {l:'> 14 jours', c:offers.filter(o=>daysDiff(o.date)>14).length,  color:'var(--tx3)'},
+  ].filter(x=>x.c>0);
+
+  /* ── Tech keywords ── */
+  const TECH=[
+    'Python','JavaScript','SQL','React','Django','Flask',
+    'Data','ERP','SAP','Linux','Git','Agile','Scrum',
+    'Power BI','Salesforce','Java','PHP','Node',
+  ];
+  const kwCounts=TECH.map(kw=>({
+    kw,c:offers.filter(o=>{
+      const t=(o.titre+' '+(o.desc||'')).toLowerCase();
+      return t.includes(kw.toLowerCase());
+    }).length
+  })).filter(x=>x.c>0).sort((a,b)=>b.c-a.c).slice(0,12);
+
+  /* ── Types (inferred from titre) ── */
+  const typeMap={};
+  offers.forEach(o=>{
+    const t=(o.titre+' '+(o.desc||'')).toLowerCase();
+    const label=t.includes('alternance')||t.includes('apprentissage')||t.includes('professionnalisation')?'Alternance':t.includes('stage')?'Stage':'Emploi';
+    typeMap[label]=(typeMap[label]||0)+1;
+  });
+  const typeTop=Object.entries(typeMap).sort((a,b)=>b[1]-a[1]);
+  const TCOLORS=['var(--indigo)','var(--sky)','var(--violet)','var(--amber)'];
+  const totalT=typeTop.reduce((s,[,c])=>s+c,0)||1;
+
+  /* ── Suivi ── */
+  const statusRows=Object.entries(STC).filter(([k])=>k).map(([k,c])=>({
+    l:c.label,c:offers.filter(o=>(statuts[o.id]||'')===k).length,color:c.dot
+  })).filter(x=>x.c>0);
+
+  const maxS=scoreBuckets[0]?.c||1;
+  const maxV=villeTop[0]?.[1]||1;
+  const maxE=entTop[0]?.[1]||1;
+  const maxSt=statusRows[0]?.c||1;
+
+  function KpiCount({val,lbl,sub,cls}){
+    const v=useCountUp(typeof val==='number'?val:0);
+    return <div className={`kpi-card ${cls}`}>
+      <div className="kpi-val">{typeof val==='string'?val:v}</div>
+      <div className="kpi-lbl">{lbl}</div>
+      {sub&&<div className="kpi-sub">{sub}</div>}
+    </div>;
+  }
+
+  function BarList({rows,maxV}){
+    return rows.map((r,i)=><div key={i} className="bar-row">
+      <div className="bar-lbl">{r.l}</div>
+      <div className="bar-track"><div className="bar-fill" style={{width:`${Math.round((r.c/maxV)*100)}%`,background:r.color,animationDelay:`${i*.07}s`}}/></div>
+      <div className="bar-val">{r.c}</div>
+    </div>);
+  }
+
+  return <>
+    {/* ── KPI row ── */}
+    <div className="kpi-row" style={{animation:'fadeUp .3s ease both'}}>
+      <KpiCount val={offers.length}  lbl="Offres totales"       sub="dans la base"      cls="kpi-indigo"/>
+      <KpiCount val={topScore}        lbl="Score ≥ 10"           sub="offres prioritaires" cls="kpi-amber"/>
+      <KpiCount val={scoreAvg}        lbl="Score moyen"          sub={`max ${scoreMax}`}   cls="kpi-green"/>
+      <KpiCount val={recent7}         lbl="Nouvelles < 7 j"      sub={`${recent14} < 14 j`}  cls="kpi-sky"/>
+      <KpiCount val={`${pctSuivi}%`}  lbl="Offres suivies"       sub={`${nbSuivi} sur ${offers.length}`} cls="kpi-violet"/>
+    </div>
+
+    {/* ── Charts grid ── */}
+    <div className="stats-grid">
+      <div className="chart-card">
+        <div className="chart-title"><Icon n="bar" size={16}/>Distribution des scores</div>
+        <BarList rows={scoreBuckets} maxV={maxS}/>
+        <div style={{marginTop:12,padding:'10px 0 2px',borderTop:'1px solid var(--bd)',display:'flex',gap:20}}>
+          {[{l:'Moyen',v:scoreAvg,c:'var(--indigo)'},{l:'Maximum',v:scoreMax,c:'var(--green)'},{l:'Top 10%',v:offers.length?offers[Math.floor(offers.length*.1)]?.score||0:0,c:'var(--amber)'}].map((s,i)=>(
+            <div key={i} style={{textAlign:'center',flex:1}}>
+              <div style={{fontSize:18,fontWeight:800,color:s.c,letterSpacing:-1}}>{s.v}</div>
+              <div style={{fontSize:10,color:'var(--tx3)',marginTop:1}}>{s.l}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="chart-card">
+        <div className="chart-title"><Icon n="calendar" size={16}/>Fraîcheur des offres</div>
+        <BarList rows={ageBuckets} maxV={Math.max(...ageBuckets.map(x=>x.c),1)}/>
+        <div style={{marginTop:10,padding:'10px 0 2px',borderTop:'1px solid var(--bd)',fontSize:11,color:'var(--tx3)',textAlign:'center'}}>
+          <span style={{color:'var(--green)',fontWeight:700}}>{Math.round(recent7/offers.length*100)}%</span> des offres publiées cette semaine
+        </div>
+      </div>
+
+      <div className="chart-card">
+        <div className="chart-title"><Icon n="pin" size={16}/>Top villes</div>
+        <BarList rows={villeTop.map(([l,c])=>({l,c,color:'var(--sky)'}))} maxV={maxV}/>
+      </div>
+
+      <div className="chart-card">
+        <div className="chart-title"><Icon n="users" size={16}/>Top entreprises</div>
+        <BarList rows={entTop.map(([l,c])=>({l,c,color:'var(--violet)'}))} maxV={maxE}/>
+        {entTop.length===0&&<div style={{fontSize:11,color:'var(--tx3)'}}>Données insuffisantes</div>}
+      </div>
+
+      <div className="chart-card">
+        <div className="chart-title"><Icon n="list" size={16}/>Types de postes</div>
+        {typeTop.map(([l,c],i)=><div key={i} className="pie-row">
+          <span className="pie-dot" style={{background:TCOLORS[i]||'var(--tx3)'}}/>
+          <span style={{flex:1,fontSize:12,color:'var(--tx2)'}}>{l}</span>
+          <span style={{fontSize:11,color:'var(--tx3)',fontWeight:600}}>{Math.round(c/totalT*100)}%</span>
+          <span style={{fontSize:11,color:'var(--tx3)',marginLeft:8,minWidth:28,textAlign:'right'}}>{c}</span>
+        </div>)}
+        <div style={{marginTop:12,height:8,borderRadius:999,overflow:'hidden',display:'flex',gap:2}}>
+          {typeTop.map(([l,c],i)=><div key={i} style={{flex:c,background:TCOLORS[i]||'var(--tx3)',transition:'flex .6s ease'}}/>)}
+        </div>
+      </div>
+
+      <div className="chart-card">
+        <div className="chart-title"><Icon n="sparkle" size={16}/>Mots-clés tech détectés</div>
+        <div className="tag-cloud">
+          {kwCounts.map(({kw,c})=>(
+            <span key={kw} className="tech-tag">
+              {kw}<span className="tech-tag-cnt">{c}</span>
+            </span>
+          ))}
+          {kwCounts.length===0&&<span style={{fontSize:11,color:'var(--tx3)'}}>Aucun mot-clé détecté</span>}
+        </div>
+      </div>
+
+      {statusRows.length>0&&<div className="chart-card">
+        <div className="chart-title"><Icon n="send" size={16}/>Suivi des candidatures</div>
+        <BarList rows={statusRows} maxV={maxSt}/>
+        <div style={{marginTop:10,padding:'8px 0 2px',borderTop:'1px solid var(--bd)',fontSize:11,color:'var(--tx3)',textAlign:'center'}}>
+          Taux de suivi : <span style={{color:'var(--indigo)',fontWeight:700}}>{pctSuivi}%</span> des offres trackées
+        </div>
+      </div>}
+    </div>
+  </>;
+}
+
+/* ══ France Map ══ */
+const GEOJSON_URL='https://raw.githubusercontent.com/gregoiredavid/france-geojson/master/departements-version-simplifiee.geojson';
+
+function MapView({offers,statuts,onStatus}){
+  const svgRef=useRef(null);
+  const[geoData,setGeoData]=useState(null);
+  const[geoError,setGeoError]=useState('');
+  const[tooltip,setTooltip]=useState(null);
+  const[hlDept,setHlDept]=useState(null);
+  const[selectedDept,setSelectedDept]=useState(null);
+
+  /* callbacks via refs so D3 handlers always see current state */
+  const cbHover=useRef(null);
+  const cbLeave=useRef(null);
+  const cbClick=useRef(null);
+  cbHover.current=(event,code,cnt,el)=>{
+    const rect=el.getBoundingClientRect();
+    setTooltip({name:DEPT_NAMES[code]||`Dept. ${code}`,code,cnt,x:event.clientX-rect.left,y:event.clientY-rect.top});
+    setHlDept(code);
+  };
+  cbLeave.current=()=>{setTooltip(null);setHlDept(null);};
+  cbClick.current=(code)=>setSelectedDept(prev=>prev===code?null:code);
+
+  const deptCounts=useMemo(()=>{
+    const c={};
+    offers.forEach(o=>{const d=extractDept(o.lieu);if(d)c[d]=(c[d]||0)+1;});
+    return c;
+  },[offers]);
+
+  const deptList=useMemo(()=>
+    Object.entries(deptCounts).sort((a,b)=>b[1]-a[1])
+      .map(([code,cnt])=>({code,cnt,name:DEPT_NAMES[code]||`Dept. ${code}`}))
+  ,[deptCounts]);
+
+  const deptOffers=useMemo(()=>
+    selectedDept?offers.filter(o=>extractDept(o.lieu)===selectedDept):[]
+  ,[offers,selectedDept]);
+
+  /* Load GeoJSON */
+  useEffect(()=>{
+    fetch(GEOJSON_URL)
+      .then(r=>{if(!r.ok)throw new Error('Erreur réseau');return r.json();})
+      .then(d=>setGeoData(d))
+      .catch(e=>setGeoError(e.message));
+  },[]);
+
+  /* D3 render */
+  useEffect(()=>{
+    if(!geoData||!svgRef.current)return;
+    const el=svgRef.current;
+    const W=el.clientWidth||700;
+    const H=Math.round(W*.75);
+    el.setAttribute('viewBox',`0 0 ${W} ${H}`);
+    const svg=d3.select(el);
+    svg.selectAll('*').remove();
+    const proj=d3.geoConicConformal().center([2.454071,46.279229]).scale(W*3.6).translate([W/2,H/2]);
+    const path=d3.geoPath().projection(proj);
+    const maxCnt=Math.max(...Object.values(deptCounts),1);
+    const colScale=d3.scaleSequential().domain([0,maxCnt])
+      .interpolator(d3.interpolate('#263348','#6366f1'));
+
+    svg.selectAll('.dept-path')
+      .data(geoData.features).enter().append('path')
+      .attr('class','dept-path')
+      .attr('d',path)
+      .attr('fill',d=>colScale(deptCounts[d.properties.code]||0))
+      .attr('stroke','rgba(255,255,255,.08)').attr('stroke-width',.7)
+      .style('cursor','pointer')
+      .on('mouseenter',(event,d)=>cbHover.current(event,d.properties.code,deptCounts[d.properties.code]||0,el))
+      .on('mouseleave',()=>cbLeave.current())
+      .on('click',(event,d)=>{event.stopPropagation();cbClick.current(d.properties.code);});
+
+    /* Bubbles */
+    const bubbles=svg.append('g');
+    Object.entries(deptCounts).forEach(([code,cnt],i)=>{
+      const feat=geoData.features.find(f=>f.properties.code===code);
+      if(!feat)return;
+      const c=path.centroid(feat);
+      if(!c||isNaN(c[0]))return;
+      bubbles.append('circle')
+        .attr('cx',c[0]).attr('cy',c[1]).attr('r',0)
+        .attr('fill','rgba(99,102,241,.5)').attr('stroke','#a5b4fc').attr('stroke-width',1)
+        .attr('pointer-events','none')
+        .transition().delay(i*35).duration(480).ease(d3.easeBounceOut)
+        .attr('r',Math.min(Math.sqrt(cnt)*5+4,30));
+    });
+  },[geoData,deptCounts]);
+
+  /* Highlight selected/hovered */
+  useEffect(()=>{
+    if(!svgRef.current)return;
+    d3.select(svgRef.current).selectAll('.dept-path')
+      .attr('opacity',d=>{
+        const c=d.properties.code;
+        if(selectedDept&&c===selectedDept)return 1;
+        if(selectedDept)return .45;
+        if(hlDept&&c===hlDept)return 1;
+        return 1;
+      })
+      .attr('stroke',d=>d.properties.code===selectedDept?'#a5b4fc':'rgba(255,255,255,.08)')
+      .attr('stroke-width',d=>d.properties.code===selectedDept?2:.7);
+  },[hlDept,selectedDept]);
+
+  if(geoError) return <div className="map-wrap"><div className="map-loading">Carte indisponible — {geoError}</div></div>;
+
+  return <>
+    <div className="map-wrap">
+      <div className="map-header">
+        <Icon n="map" size={16} style={{color:'var(--indigo)'}}/>
+        <span className="map-title">Carte des offres par département</span>
+        <span className="map-sub" style={{fontSize:11,color:'var(--tx3)'}}>Cliquer sur un département pour voir ses offres</span>
+        <span className="map-sub">{Object.keys(deptCounts).length} depts · {offers.length} offres</span>
+      </div>
+      <div className="map-body">
+        <div className="map-svg-wrap">
+          {!geoData&&<div className="map-loading">Chargement de la carte…</div>}
+          <svg ref={svgRef} className="map-svg" style={{minHeight:360}}/>
+          {tooltip&&<div className="map-tooltip" style={{left:Math.min(tooltip.x+14,500),top:tooltip.y-20}}>
+            <strong>{tooltip.name}</strong>
+            <span style={{color:'var(--tx3)',fontSize:11,display:'block'}}>Dept. {tooltip.code}</span>
+            <div style={{marginTop:5,fontSize:13,color:'var(--indigo)',fontWeight:700}}>
+              {tooltip.cnt} offre{tooltip.cnt>1?'s':''}
+            </div>
+            {tooltip.cnt>0&&<div style={{fontSize:10,color:'var(--tx3)',marginTop:3}}>Cliquer pour voir les offres</div>}
+          </div>}
+        </div>
+        <div className="map-panel">
+          <div className="map-panel-title">Classement</div>
+          {deptList.length===0&&<div style={{fontSize:11,color:'var(--tx3)'}}>Aucune donnée</div>}
+          {deptList.map((d,i)=><div key={d.code}
+            className={`dept-row${selectedDept===d.code?' hl':hlDept===d.code?' hl':''}`}
+            onClick={()=>setSelectedDept(prev=>prev===d.code?null:d.code)}
+            onMouseEnter={()=>setHlDept(d.code)}
+            onMouseLeave={()=>setHlDept(null)}>
+            <span style={{fontSize:10,color:'var(--tx3)',minWidth:16}}>{i+1}</span>
+            <span className="dept-name">{d.name}</span>
+            <span style={{padding:'1px 7px',borderRadius:999,fontSize:10,fontWeight:700,background:'var(--indigo-d)',color:'var(--indigo)'}}>{d.cnt}</span>
+          </div>)}
+        </div>
+      </div>
+      <div className="map-legend">
+        <span style={{fontSize:11,color:'var(--tx3)'}}>0 offre</span>
+        <div className="legend-grad"/>
+        <span style={{fontSize:11,color:'var(--tx3)'}}>+ d'offres</span>
+        <span style={{marginLeft:'auto',display:'flex',alignItems:'center',gap:6,fontSize:11,color:'var(--tx3)'}}>
+          <svg width={10} height={10}><circle cx={5} cy={5} r={5} fill="rgba(99,102,241,.55)" stroke="#a5b4fc" strokeWidth={1}/></svg>
+          Densité d'offres
+        </span>
+      </div>
+    </div>
+
+    {/* ── Dept drawer ── */}
+    {selectedDept&&<div className="dept-drawer">
+      <div className="dept-drawer-head">
+        <Icon n="pin" size={15} style={{color:'var(--indigo)'}}/>
+        <span className="dept-drawer-title">
+          Offres en <strong>{DEPT_NAMES[selectedDept]||`Dept. ${selectedDept}`}</strong>
+          <span style={{fontWeight:400,color:'var(--tx3)',marginLeft:8}}>({deptOffers.length} offre{deptOffers.length>1?'s':''})</span>
+        </span>
+        <button className="dept-drawer-close" onClick={()=>setSelectedDept(null)}>
+          <Icon n="x" size={12}/>
+        </button>
+      </div>
+      {deptOffers.length===0
+        ?<div className="empty" style={{padding:28}}>
+            <Icon n="search" size={32} style={{opacity:.25}}/>
+            <div className="empty-title" style={{fontSize:13}}>Aucune offre pour ce département</div>
+          </div>
+        :<div>
+          <div className="tbl-head">
+            <div/><div>Poste</div><div>Entreprise</div><div>Ville</div><div>Date</div><div>Statut</div><div/>
+          </div>
+          {deptOffers.map((o,i)=><OfferRow key={o.id} o={o} idx={i} status={statuts[o.id]||''} onStatus={onStatus}/>)}
+        </div>
+      }
+    </div>}
+  </>;
+}
+
+/* ══ App ══ */
+function App(){
+  const[offers,setOffers]=useState([]);
+  const[loading,setLoading]=useState(true);
+  const[error,setError]=useState('');
+  const[statuts,setStatuts]=useLS('alt_statuts_v2',{});
+  const[tab,setTab]=useState('all');
+  const[refreshing,setRefreshing]=useState(false);
+  const[theme,setTheme]=useLS('alt_theme','dark');
+
+  useEffect(()=>{ document.documentElement.setAttribute('data-theme',theme); },[theme]);
+  const toggleTheme=()=>setTheme(t=>t==='dark'?'light':'dark');
+
+  const fetchOffers=useCallback(async(force=false)=>{
+    setRefreshing(true);
+    if(force||offers.length===0)setLoading(true);
+    setError('');
+    try{
+      const r=await fetch('/api/offres');
+      if(!r.ok)throw new Error(`HTTP ${r.status}`);
+      const data=await r.json();
+      if(data.error)throw new Error(data.error);
+      setOffers(Array.isArray(data)?data:[]);
+    }catch(e){setError(e.message);}
+    finally{setLoading(false);setRefreshing(false);}
+  },[]);
+
+  useEffect(()=>{fetchOffers();},[]);
+
+  const onStatus=useCallback((id,val)=>setStatuts(prev=>({...prev,[id]:val})),[setStatuts]);
+
+  const cnt=key=>offers.filter(o=>(statuts[o.id]||'')===key).length;
+  const nbFav=cnt('fav'),nbApp=cnt('apply'),nbSent=cnt('sent'),nbInt=cnt('int'),nbRef=cnt('refused');
+
+  const TAB_TITLE={all:'Toutes les offres',suivi:'Suivi — Kanban',stats:'Statistiques',map:'Carte de France',fav:'Favoris',apply:'À postuler',sent:'Postulés',int:'Entretiens',refused:'Refusés'};
+  const TAB_ICON={all:'list',suivi:'board',stats:'bar',map:'map',fav:'star',apply:'clip',sent:'send',int:'users',refused:'x'};
+
+  const NAV_STATUS=[
+    {key:'fav',label:'Favoris',dot:'var(--amber)',cnt:nbFav},
+    {key:'apply',label:'À postuler',dot:'var(--indigo)',cnt:nbApp},
+    {key:'sent',label:'Postulés',dot:'var(--sky)',cnt:nbSent},
+    {key:'int',label:'Entretiens',dot:'var(--green)',cnt:nbInt},
+    {key:'refused',label:'Refusés',dot:'var(--red)',cnt:nbRef},
+  ];
+
+  return <div className="app">
+    {/* ── Sidebar ── */}
+    <aside className="sidebar">
+      <div className="sb-brand">
+        <div className="brand-icon"><img src="logo.png" alt="Logo"/></div>
+        <div>
+          <div className="brand-txt">Alternance</div>
+          <div className="brand-sub">Dashboard</div>
+        </div>
+      </div>
+
+      <div className="sb-sec">
+        <div className="sb-lbl">Principal</div>
+        {[
+          {key:'all',  label:'Toutes les offres',icon:'list', badge:offers.length||null},
+          {key:'suivi',label:'Kanban suivi',      icon:'board',badge:null},
+          {key:'map',  label:'Carte de France',   icon:'map',  badge:null},
+          {key:'stats',label:'Statistiques',      icon:'bar',  badge:null},
+        ].map(item=>(
+          <button key={item.key} className={`nav-item${tab===item.key?' active':''}`} onClick={()=>setTab(item.key)}>
+            <Icon n={item.icon} size={15}/>
+            {item.label}
+            {item.badge?<span className="nav-badge">{item.badge}</span>:null}
+          </button>
+        ))}
+      </div>
+
+      <div className="sb-div"/>
+
+      <div className="sb-sec">
+        <div className="sb-lbl">Candidatures</div>
+        {NAV_STATUS.map(item=>(
+          <button key={item.key} className={`nav-item${tab===item.key?' active':''}`} onClick={()=>setTab(item.key)}>
+            <span className="nav-dot" style={{background:item.dot}}/>
+            {item.label}
+            {item.cnt>0
+              ?<span className="nav-badge">{item.cnt}</span>
+              :<span className="nav-cnt">0</span>
+            }
+          </button>
+        ))}
+      </div>
+
+      <div className="sb-footer">
+        <button className="theme-btn" onClick={toggleTheme}>
+          <Icon n={theme==='dark'?'sun':'moon'} size={14}/>
+          {theme==='dark'?'Mode clair':'Mode sombre'}
+        </button>
+        <button className="refresh-btn" disabled={refreshing} onClick={()=>fetchOffers(true)}>
+          <Icon n="refresh" size={13} style={refreshing?{animation:'spin .7s linear infinite'}:{}}/>
+          {refreshing?'Actualisation…':'Actualiser les offres'}
+        </button>
+      </div>
+    </aside>
+
+    {/* ── Main ── */}
+    <div className="main">
+      <header className="topbar">
+        <Icon n={TAB_ICON[tab]||'list'} size={17}/>
+        <span className="topbar-title">{TAB_TITLE[tab]||tab}</span>
+        {!loading&&<div className="live-dot" style={{marginLeft:4}}/>}
+        <span className="topbar-count">
+          {!loading&&offers.length>0?`${offers.length} offres · ${new Date().toLocaleDateString('fr-FR')}`:loading?'Chargement…':''}
+        </span>
+      </header>
+
+      <div className="page">
+        {error&&<div className="err-banner"><Icon n="x" size={16}/>Erreur : {error}</div>}
+
+        {/* Stat row */}
+        {(tab==='all'||tab==='suivi'||tab==='map')&&!loading&&offers.length>0&&(
+          <div className="stat-row">
+            <StatCard nb={offers.length} label="Offres trouvées" icon="search" cls="sc-indigo" onClick={()=>setTab('all')}/>
+            <StatCard nb={offers.filter(o=>o.score>=10).length} label="Score ≥ 10" icon="star" cls="sc-amber"/>
+            <StatCard nb={nbFav}  label="Favoris"    icon="star"  cls="sc-violet" onClick={()=>setTab('fav')}/>
+            <StatCard nb={nbSent} label="Postulés"   icon="send"  cls="sc-sky"    onClick={()=>setTab('sent')}/>
+            <StatCard nb={nbInt}  label="Entretiens" icon="users" cls="sc-green"  onClick={()=>setTab('int')}/>
+          </div>
+        )}
+
+        {tab==='all'&&<OfferTable offers={offers} statuts={statuts} onStatus={onStatus} loading={loading}/>}
+
+        {tab==='suivi'&&(loading
+          ?<div style={{color:'var(--tx3)',fontSize:12}}>Chargement…</div>
+          :<Kanban offers={offers} statuts={statuts}/>
+        )}
+
+        {tab==='map'&&(loading
+          ?<div className="map-wrap"><div className="map-loading">Chargement des données…</div></div>
+          :<MapView offers={offers} statuts={statuts} onStatus={onStatus}/>
+        )}
+
+        {tab==='stats'&&(loading
+          ?<div style={{color:'var(--tx3)',fontSize:12}}>Chargement…</div>
+          :offers.length===0
+            ?<div className="empty"><Icon n="bar" size={42} style={{opacity:.25}}/><div className="empty-title">Pas encore de données</div></div>
+            :<Stats offers={offers} statuts={statuts}/>
+        )}
+
+        {/* Status views */}
+        {['fav','apply','sent','int','refused'].includes(tab)&&(
+          loading
+            ?<SkeletonRows/>
+            :offers.filter(o=>(statuts[o.id]||'')===tab).length===0
+              ?<div className="empty" style={{marginTop:24}}>
+                <Icon n={STC[tab]?.icon||'list'} size={42} style={{opacity:.25}}/>
+                <div className="empty-title">Aucune offre en « {STC[tab]?.label} »</div>
+                <div className="empty-sub">Ouvrez une offre dans <strong>Toutes les offres</strong> et changez son statut.</div>
+              </div>
+              :<OfferTable offers={offers} statuts={statuts} onStatus={onStatus} loading={loading} preFilter={tab}/>
+        )}
+      </div>
+    </div>
+  </div>;
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

@@ -1,0 +1,36 @@
+name: Pipeline Alternance
+
+on:
+  schedule:
+    - cron: '0 6 * * *'   # Chaque jour à 6h UTC (8h Paris en hiver)
+  workflow_dispatch:        # Lancement manuel depuis GitHub
+
+jobs:
+  pipeline:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout du repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Installer les dépendances
+        run: pip install requests
+
+      - name: Lancer le pipeline
+        env:
+          FRANCE_TRAVAIL_CLIENT_ID:     ${{ secrets.FRANCE_TRAVAIL_CLIENT_ID }}
+          FRANCE_TRAVAIL_CLIENT_SECRET: ${{ secrets.FRANCE_TRAVAIL_CLIENT_SECRET }}
+        run: python pipeline.py
+
+      - name: Commit offres.db et logs
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add offres.db logs/pipeline.log
+          git diff --staged --quiet || git commit -m "chore: mise à jour offres $(date -u +%Y-%m-%d)"
+          git push

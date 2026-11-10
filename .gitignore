@@ -1,0 +1,16 @@
+venv/
+__pycache__/
+*.pyc
+.vscode/
+
+# Anciens fichiers CSV (remplacés par offres.db)
+offres.csv
+offres_scored.csv
+
+# Fichiers d'environnement — ne jamais committer
+.env
+.env.local
+*.env
+
+# offres.db est versionné intentionnellement (mis à jour par le pipeline CI)
+# collecte.py est versionné avec des credentials vides — remplir localement
