@@ -1,0 +1,7 @@
+collecte.py
+pipeline.py
+dev_server.py
+logs/
+venv/
+__pycache__/
+*.pyc
