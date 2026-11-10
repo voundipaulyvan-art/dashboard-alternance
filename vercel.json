@@ -4,5 +4,10 @@
       "runtime": "python3.12",
       "maxDuration": 30
     }
-  }
+  },
+  "routes": [
+    { "src": "/api/offres", "dest": "/api/offres.py" },
+    { "src": "/",           "dest": "/index.html" },
+    { "src": "/(.*)",       "dest": "/$1" }
+  ]
 }
