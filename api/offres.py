@@ -252,7 +252,7 @@ class handler(BaseHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(body)
         else:
-            rel = path.lstrip("/") or "index.html"
+            rel = path.lstrip("/") or "dashboard.html"
             file_path = os.path.join(ROOT_DIR, rel)
             ext = os.path.splitext(file_path)[1].lower()
             ctype = CONTENT_TYPES.get(ext, "text/html; charset=utf-8")
