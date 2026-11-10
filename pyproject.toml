@@ -1,2 +1,9 @@
+[project]
+name = "dashboard-alternance"
+version = "0.1.0"
+dependencies = [
+    "requests",
+]
+
 [tool.vercel]
 entrypoint = "api.offres:handler"
