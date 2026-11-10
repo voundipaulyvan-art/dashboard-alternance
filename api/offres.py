@@ -1,6 +1,8 @@
-from http.server import BaseHTTPRequestHandler
+import sys, os
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from http.server import SimpleHTTPRequestHandler
 import json
-import os
 import requests
 from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -217,24 +219,30 @@ def get_all_offers_cached() -> list:
     return get_all_offers()
 
 
-class handler(BaseHTTPRequestHandler):
+class handler(SimpleHTTPRequestHandler):
     def do_GET(self):
-        try:
-            data = get_all_offers_cached()
-            body = json.dumps(data, ensure_ascii=False).encode("utf-8")
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json; charset=utf-8")
-            self.send_header("Content-Length", str(len(body)))
-            self.send_header("Access-Control-Allow-Origin", "*")
-            self.end_headers()
-            self.wfile.write(body)
-        except Exception as e:
-            body = json.dumps({"error": str(e)}).encode()
-            self.send_response(500)
-            self.send_header("Content-Type", "application/json")
-            self.send_header("Content-Length", str(len(body)))
-            self.end_headers()
-            self.wfile.write(body)
+        if self.path.split("?")[0] in ("/api/offres", "/api/offres.py"):
+            try:
+                data = get_all_offers_cached()
+                body = json.dumps(data, ensure_ascii=False).encode("utf-8")
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.send_header("Content-Length", str(len(body)))
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.end_headers()
+                self.wfile.write(body)
+            except Exception as e:
+                body = json.dumps({"error": str(e)}).encode()
+                self.send_response(500)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+        else:
+            # Serve static files for all other routes
+            if self.path == "/" or self.path == "":
+                self.path = "/index.html"
+            super().do_GET()
 
     def log_message(self, format, *args):
         pass
