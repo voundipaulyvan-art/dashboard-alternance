@@ -1,7 +1,18 @@
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from http.server import SimpleHTTPRequestHandler
+from http.server import BaseHTTPRequestHandler
+
+ROOT_DIR = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+CONTENT_TYPES = {
+    ".html": "text/html; charset=utf-8",
+    ".js":   "application/javascript",
+    ".css":  "text/css",
+    ".png":  "image/png",
+    ".jpg":  "image/jpeg",
+    ".ico":  "image/x-icon",
+    ".svg":  "image/svg+xml",
+}
 import json
 import requests
 from datetime import datetime, timedelta
@@ -219,9 +230,11 @@ def get_all_offers_cached() -> list:
     return get_all_offers()
 
 
-class handler(SimpleHTTPRequestHandler):
+class handler(BaseHTTPRequestHandler):
     def do_GET(self):
-        if self.path.split("?")[0] in ("/api/offres", "/api/offres.py"):
+        path = self.path.split("?")[0]
+
+        if path in ("/api/offres", "/api/offres.py"):
             try:
                 data = get_all_offers_cached()
                 body = json.dumps(data, ensure_ascii=False).encode("utf-8")
@@ -239,10 +252,31 @@ class handler(SimpleHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(body)
         else:
-            # Serve static files for all other routes
-            if self.path == "/" or self.path == "":
-                self.path = "/index.html"
-            super().do_GET()
+            rel = path.lstrip("/") or "index.html"
+            file_path = os.path.join(ROOT_DIR, rel)
+            ext = os.path.splitext(file_path)[1].lower()
+            ctype = CONTENT_TYPES.get(ext, "text/html; charset=utf-8")
+            try:
+                with open(file_path, "rb") as f:
+                    body = f.read()
+                self.send_response(200)
+                self.send_header("Content-Type", ctype)
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+            except Exception:
+                try:
+                    with open(os.path.join(ROOT_DIR, "index.html"), "rb") as f:
+                        body = f.read()
+                    self.send_response(200)
+                    self.send_header("Content-Type", "text/html; charset=utf-8")
+                    self.send_header("Content-Length", str(len(body)))
+                    self.end_headers()
+                    self.wfile.write(body)
+                except Exception:
+                    self.send_response(404)
+                    self.end_headers()
+                    self.wfile.write(b"Not Found")
 
     def log_message(self, format, *args):
         pass
